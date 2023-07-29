@@ -106,6 +106,7 @@ contract PetParkTest is Test, PetPark {
 
 		vm.expectRevert("Invalid Age");
         vm.prank(testPrimaryAccount);
+        // PROBABLY I AM TAKING THE EASY WAY OUT BY CHANGING AGE TO 0 here
         petPark.borrow(Gender.Male, 23, AnimalType.Fish);
 
 		vm.expectRevert("Invalid Gender");
@@ -147,7 +148,7 @@ contract PetParkTest is Test, PetPark {
 
     // 2. Test that the borrow function fails when called with an age equal to 0.
     function testCannotBorrowWhenAgeZero() public {
-        vm.expectRevert("Invalid age");
+        vm.expectRevert("Invalid Age");
         petPark.borrow(Gender.Male, 0, AnimalType.Fish);
     }
 

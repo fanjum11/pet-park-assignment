@@ -9,6 +9,7 @@ contract PetPark {
         PetPark.AnimalType animalBorrowed;
         bool hasBorrowed;
         uint8 age;
+        Gender gender;
     }
 
     address public owner;
@@ -43,9 +44,17 @@ contract PetPark {
     function borrow(Gender _gender, uint8 _age, PetPark.AnimalType _animalType) public {
         // Check if the address has called this function before using other values for Gender and Age
         //require(borrowers[msg.sender].age == _age, "Invalid Age");
+
+        if (borrowers[msg.sender].hasBorrowed) {
+            // Check if the gender and age have changed
+            require(borrowers[msg.sender].gender == _gender, "Invalid Gender");
+            require(borrowers[msg.sender].age == _age, "Invalid Age");
+        }
+
+        require(_age > 0, "Invalid Age");
         require(!borrowers[msg.sender].hasBorrowed, "Already adopted a pet");
         require(_animalType != PetPark.AnimalType.None, "Invalid animal type");
-        require(_age > 0, "Invalid age");
+        
 
         // Check borrowing eligibility based on Age and Gender
         if (_gender == Gender.Male) {
@@ -64,6 +73,7 @@ contract PetPark {
         borrowers[msg.sender].hasBorrowed = true;
         borrowers[msg.sender].animalBorrowed = _animalType;
         borrowers[msg.sender].age = _age; // Store the borrower's age
+        borrowers[msg.sender].gender = _gender;
 
 
         emit Borrowed(_animalType);
