@@ -4,6 +4,8 @@ pragma solidity ^0.8.13;
 import "forge-std/Test.sol";
 import "../src/PetPark.sol";
 
+// to run single test 
+//forge test -vv  --match-test testBorrowCountDecrement
 
 contract PetParkTest is Test, PetPark {
     PetPark petPark;
@@ -25,15 +27,12 @@ contract PetParkTest is Test, PetPark {
         petPark.add(AnimalType.Fish, 5);
     }
 
-    function testCannotAddAnimalWhenNonOwner() public {
-        // 1. Complete this test and remove the assert line below
-        assert(false);
-    }
-
     function testCannotAddInvalidAnimal() public {
         vm.expectRevert("Invalid animal");
         petPark.add(AnimalType.None, 5);
     }
+
+
 
     function testExpectEmitAddEvent() public {
         vm.expectEmit(false, false, false, true);
@@ -42,49 +41,45 @@ contract PetParkTest is Test, PetPark {
         petPark.add(AnimalType.Fish, 5);
     }
 
-    function testCannotBorrowWhenAgeZero() public {
-        // 2. Complete this test and remove the assert line below
-        assert(false);
-    }
 
     function testCannotBorrowUnavailableAnimal() public {
         vm.expectRevert("Selected animal not available");
 
-        petPark.borrow(24, Gender.Male, AnimalType.Fish);
+        petPark.borrow(Gender.Male, 24, AnimalType.Fish);
     }
 
     function testCannotBorrowInvalidAnimal() public {
         vm.expectRevert("Invalid animal type");
 
-        petPark.borrow(24, Gender.Male, AnimalType.None);
+        petPark.borrow(Gender.Male, 24, AnimalType.None);
     }
 
     function testCannotBorrowCatForMen() public {
         petPark.add(AnimalType.Cat, 5);
 
         vm.expectRevert("Invalid animal for men");
-        petPark.borrow(24, Gender.Male, AnimalType.Cat);
+        petPark.borrow(Gender.Male, 24, AnimalType.Cat);
     }
 
     function testCannotBorrowRabbitForMen() public {
         petPark.add(AnimalType.Rabbit, 5);
 
         vm.expectRevert("Invalid animal for men");
-        petPark.borrow(24, Gender.Male, AnimalType.Rabbit);
+        petPark.borrow(Gender.Male, 24, AnimalType.Rabbit);
     }
 
     function testCannotBorrowParrotForMen() public {
         petPark.add(AnimalType.Parrot, 5);
 
         vm.expectRevert("Invalid animal for men");
-        petPark.borrow(24, Gender.Male, AnimalType.Parrot);
+        petPark.borrow(Gender.Male, 24, AnimalType.Parrot);
     }
 
     function testCannotBorrowForWomenUnder40() public {
         petPark.add(AnimalType.Cat, 5);
 
         vm.expectRevert("Invalid animal for women under 40");
-        petPark.borrow(24, Gender.Female, AnimalType.Cat);
+        petPark.borrow(Gender.Female, 24, AnimalType.Cat);
     }
 
     function testCannotBorrowTwiceAtSameTime() public {
@@ -92,30 +87,30 @@ contract PetParkTest is Test, PetPark {
         petPark.add(AnimalType.Cat, 5);
 
         vm.prank(testPrimaryAccount);
-        petPark.borrow(24, Gender.Male, AnimalType.Fish);
+        petPark.borrow(Gender.Male, 24, AnimalType.Fish);
 
 		vm.expectRevert("Already adopted a pet");
         vm.prank(testPrimaryAccount);
-        petPark.borrow(24, Gender.Male, AnimalType.Fish);
+        petPark.borrow(Gender.Male, 24, AnimalType.Fish);
 
         vm.expectRevert("Already adopted a pet");
         vm.prank(testPrimaryAccount);
-        petPark.borrow(24, Gender.Male, AnimalType.Cat);
+        petPark.borrow(Gender.Male, 24, AnimalType.Cat);
     }
 
     function testCannotBorrowWhenAddressDetailsAreDifferent() public {
         petPark.add(AnimalType.Fish, 5);
 
         vm.prank(testPrimaryAccount);
-        petPark.borrow(24, Gender.Male, AnimalType.Fish);
+        petPark.borrow(Gender.Male, 24, AnimalType.Fish);
 
 		vm.expectRevert("Invalid Age");
         vm.prank(testPrimaryAccount);
-        petPark.borrow(23, Gender.Male, AnimalType.Fish);
+        petPark.borrow(Gender.Male, 23, AnimalType.Fish);
 
 		vm.expectRevert("Invalid Gender");
         vm.prank(testPrimaryAccount);
-        petPark.borrow(24, Gender.Female, AnimalType.Fish);
+        petPark.borrow(Gender.Female, 24, AnimalType.Fish);
     }
 
     function testExpectEmitOnBorrow() public {
@@ -123,12 +118,7 @@ contract PetParkTest is Test, PetPark {
         vm.expectEmit(false, false, false, true);
 
         emit Borrowed(AnimalType.Fish);
-        petPark.borrow(24, Gender.Male, AnimalType.Fish);
-    }
-
-    function testBorrowCountDecrement() public {
-        // 3. Complete this test and remove the assert line below
-        assert(false);
+        petPark.borrow(Gender.Male, 24, AnimalType.Fish);
     }
 
     function testCannotGiveBack() public {
@@ -139,7 +129,7 @@ contract PetParkTest is Test, PetPark {
     function testPetCountIncrement() public {
         petPark.add(AnimalType.Fish, 5);
 
-        petPark.borrow(24, Gender.Male, AnimalType.Fish);
+        petPark.borrow(Gender.Male, 24, AnimalType.Fish);
         uint reducedPetCount = petPark.animalCounts(AnimalType.Fish);
 
         petPark.giveBackAnimal();
@@ -147,4 +137,50 @@ contract PetParkTest is Test, PetPark {
 
 		assertEq(reducedPetCount, currentPetCount - 1);
     }
+
+    // 1. Test that any non-owner account cannot add animals using the add function
+    function testCannotAddAnimalWhenNonOwner() public {
+        vm.expectRevert("Only contract owner can access this function.");
+        vm.prank(testPrimaryAccount);
+        petPark.add(AnimalType.Fish, 5);
+    }
+
+    // 2. Test that the borrow function fails when called with an age equal to 0.
+    function testCannotBorrowWhenAgeZero() public {
+        vm.expectRevert("Invalid age");
+        petPark.borrow(Gender.Male, 0, AnimalType.Fish);
+    }
+
+    // 3. Test that the count of animal decreases correctly when the borrow function is called.
+    function testBorrowCountDecrement() public {
+        petPark.add(AnimalType.Fish, 5);
+
+        // Borrow an animal
+        petPark.borrow(Gender.Male, 24, AnimalType.Fish);
+        uint256 reducedPetCount = petPark.animalCounts(AnimalType.Fish);
+
+        // Print the reducedPetCount value
+        console.log("Reduced Pet Count console:", reducedPetCount);
+
+        // Emit event for reducedPetCount
+        emit log_uint(reducedPetCount);
+
+        // Give back the animal
+        petPark.giveBackAnimal();
+        uint256 currentPetCount = petPark.animalCounts(AnimalType.Fish);
+
+        // Print the currentPetCount value
+        console.log("Current Pet Count console:", currentPetCount);
+
+        // Emit event for currentPetCount
+        emit LogValue("Current Pet Count", currentPetCount);
+
+        // Assert that the counts are equal
+        assertEq(reducedPetCount, currentPetCount-1, "reducedPetCount and currentPetCount are not equal.");
+
+        //assertEq(reducedPetCount, currentPetCount);
+    }
+
+    event LogValue(string message, uint256 value);
+
 }
